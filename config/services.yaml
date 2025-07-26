@@ -1,0 +1,474 @@
+# 📁 MÉTRIQUES PROMETHEUS STORAGE-API ULTRA-SPÉCIALISÉES
+services:
+    # 🔧 COLLECTEUR PRINCIPAL DE MÉTRIQUES
+    StorageApi\Infrastructure\Monitoring\PrometheusCollector:
+        arguments:
+            $registry: '@prometheus_registry'
+        tags:
+            - { name: 'kernel.event_subscriber' }
+
+    # 📈 REGISTRY PROMETHEUS
+    prometheus_registry:
+        class: Prometheus\CollectorRegistry
+        factory: ['Prometheus\CollectorRegistry', 'getDefault']
+
+    # 📁 MÉTRIQUES STOCKAGE
+    storage_metrics:
+        class: StorageApi\Infrastructure\Monitoring\StorageMetrics
+        arguments:
+            $registry: '@prometheus_registry'
+
+    # ☁️ MÉTRIQUES CLOUD
+    cloud_metrics:
+        class: StorageApi\Infrastructure\Monitoring\CloudMetrics
+        arguments:
+            $registry: '@prometheus_registry'
+
+    # 📤 MÉTRIQUES UPLOAD/DOWNLOAD
+    transfer_metrics:
+        class: StorageApi\Infrastructure\Monitoring\TransferMetrics
+        arguments:
+            $registry: '@prometheus_registry'
+
+    # 🔐 MÉTRIQUES CHIFFREMENT
+    encryption_metrics:
+        class: StorageApi\Infrastructure\Monitoring\EncryptionMetrics
+        arguments:
+            $registry: '@prometheus_registry'
+
+    # 💾 MÉTRIQUES BACKUP
+    backup_metrics:
+        class: StorageApi\Infrastructure\Monitoring\BackupMetrics
+        arguments:
+            $registry: '@prometheus_registry'
+
+    # 🔄 MÉTRIQUES SYNCHRONISATION
+    sync_metrics:
+        class: StorageApi\Infrastructure\Monitoring\SyncMetrics
+        arguments:
+            $registry: '@prometheus_registry'
+
+    # 📊 MÉTRIQUES QUOTA
+    quota_metrics:
+        class: StorageApi\Infrastructure\Monitoring\QuotaMetrics
+        arguments:
+            $registry: '@prometheus_registry'
+
+    # 🔍 MÉTRIQUES INTÉGRITÉ
+    integrity_metrics:
+        class: StorageApi\Infrastructure\Monitoring\IntegrityMetrics
+        arguments:
+            $registry: '@prometheus_registry'
+
+    # ⚡ MÉTRIQUES PERFORMANCE
+    performance_metrics:
+        class: StorageApi\Infrastructure\Monitoring\PerformanceMetrics
+        arguments:
+            $registry: '@prometheus_registry'
+
+    # 🔒 MÉTRIQUES SÉCURITÉ STORAGE
+    storage_security_metrics:
+        class: StorageApi\Infrastructure\Monitoring\StorageSecurityMetrics
+        arguments:
+            $registry: '@prometheus_registry'
+
+    # 💼 MÉTRIQUES BUSINESS STORAGE
+    business_storage_metrics:
+        class: StorageApi\Infrastructure\Monitoring\BusinessStorageMetrics
+        arguments:
+            $registry: '@prometheus_registry'
+
+# 🎛️ MÉTRIQUES PERSONNALISÉES STORAGE-API
+storage_api:
+    metrics:
+        # 📁 MÉTRIQUES STOCKAGE GLOBALES
+        storage:
+            files_stored_total:
+                type: counter
+                help: "Total des fichiers stockés"
+                labels: ['storage_backend', 'file_type', 'encryption_status']
+            
+            storage_space_used_bytes:
+                type: gauge
+                help: "Espace de stockage utilisé en bytes"
+                labels: ['storage_backend', 'data_type', 'compression_status']
+            
+            files_deleted_total:
+                type: counter
+                help: "Total des fichiers supprimés"
+                labels: ['storage_backend', 'deletion_type', 'reason']
+            
+            storage_operations_total:
+                type: counter
+                help: "Total des opérations de stockage"
+                labels: ['operation_type', 'storage_backend', 'success']
+            
+            file_size_distribution:
+                type: histogram
+                help: "Distribution des tailles de fichiers"
+                buckets: [1024, 10240, 102400, 1048576, 10485760, 104857600, 1073741824]
+                labels: ['file_type', 'storage_backend']
+            
+            storage_efficiency_ratio:
+                type: gauge
+                help: "Ratio d'efficacité de stockage (0-100)"
+                labels: ['storage_backend', 'optimization_type']
+
+        # 📤 MÉTRIQUES UPLOAD/DOWNLOAD
+        transfer:
+            uploads_total:
+                type: counter
+                help: "Total des uploads"
+                labels: ['upload_type', 'file_size_range', 'storage_backend']
+            
+            downloads_total:
+                type: counter
+                help: "Total des téléchargements"
+                labels: ['download_type', 'file_size_range', 'storage_backend']
+            
+            upload_duration_seconds:
+                type: histogram
+                help: "Durée des uploads"
+                buckets: [0.1, 1.0, 5.0, 30.0, 120.0, 600.0, 3600.0]
+                labels: ['file_size_range', 'storage_backend']
+            
+            download_duration_seconds:
+                type: histogram
+                help: "Durée des téléchargements"
+                buckets: [0.05, 0.5, 2.0, 10.0, 60.0, 300.0, 1800.0]
+                labels: ['file_size_range', 'storage_backend']
+            
+            transfer_speed_bytes_per_second:
+                type: gauge
+                help: "Vitesse de transfert en bytes/sec"
+                labels: ['transfer_type', 'storage_backend', 'network_type']
+            
+            concurrent_transfers:
+                type: gauge
+                help: "Transferts simultanés"
+                labels: ['transfer_type', 'storage_backend']
+            
+            failed_transfers_total:
+                type: counter
+                help: "Transferts échoués"
+                labels: ['transfer_type', 'failure_reason', 'storage_backend']
+
+        # ☁️ MÉTRIQUES CLOUD STORAGE
+        cloud:
+            cloud_operations_total:
+                type: counter
+                help: "Opérations cloud"
+                labels: ['cloud_provider', 'operation_type', 'success']
+            
+            cloud_latency_seconds:
+                type: histogram
+                help: "Latence des opérations cloud"
+                buckets: [0.1, 0.5, 1.0, 5.0, 15.0, 60.0]
+                labels: ['cloud_provider', 'operation_type']
+            
+            cloud_costs_total:
+                type: counter
+                help: "Coûts cloud accumulés"
+                labels: ['cloud_provider', 'cost_type', 'region']
+            
+            cloud_bandwidth_bytes:
+                type: counter
+                help: "Bande passante cloud utilisée"
+                labels: ['cloud_provider', 'direction', 'region']
+            
+            cloud_availability:
+                type: gauge
+                help: "Disponibilité des services cloud (%)"
+                labels: ['cloud_provider', 'service_type', 'region']
+            
+            multi_cloud_sync_operations:
+                type: counter
+                help: "Opérations de sync multi-cloud"
+                labels: ['source_cloud', 'target_cloud', 'sync_type']
+
+        # 🔐 MÉTRIQUES CHIFFREMENT
+        encryption:
+            encryption_operations_total:
+                type: counter
+                help: "Opérations de chiffrement"
+                labels: ['encryption_algorithm', 'operation_type', 'success']
+            
+            encryption_duration_seconds:
+                type: histogram
+                help: "Durée des opérations de chiffrement"
+                buckets: [0.01, 0.1, 0.5, 2.0, 10.0, 60.0]
+                labels: ['encryption_algorithm', 'file_size_range']
+            
+            encrypted_files_ratio:
+                type: gauge
+                help: "Ratio de fichiers chiffrés (%)"
+                labels: ['storage_backend', 'encryption_algorithm']
+            
+            key_rotations_total:
+                type: counter
+                help: "Rotations de clés"
+                labels: ['key_type', 'rotation_reason']
+            
+            decryption_errors_total:
+                type: counter
+                help: "Erreurs de déchiffrement"
+                labels: ['error_type', 'encryption_algorithm']
+
+        # 💾 MÉTRIQUES BACKUP
+        backup:
+            backups_created_total:
+                type: counter
+                help: "Sauvegardes créées"
+                labels: ['backup_type', 'storage_backend', 'compression_type']
+            
+            backup_size_bytes:
+                type: histogram
+                help: "Taille des sauvegardes"
+                buckets: [1048576, 10485760, 104857600, 1073741824, 10737418240]
+                labels: ['backup_type', 'compression_type']
+            
+            backup_duration_seconds:
+                type: histogram
+                help: "Durée des sauvegardes"
+                buckets: [60, 300, 1800, 7200, 21600, 86400]
+                labels: ['backup_type', 'data_size_range']
+            
+            backup_success_rate:
+                type: gauge
+                help: "Taux de réussite des sauvegardes (%)"
+                labels: ['backup_type', 'storage_backend']
+            
+            restore_operations_total:
+                type: counter
+                help: "Opérations de restauration"
+                labels: ['restore_type', 'success', 'backup_age_range']
+            
+            rpo_compliance:
+                type: gauge
+                help: "Conformité RPO (0-100)"
+                labels: ['backup_policy', 'data_category']
+
+        # 🔄 MÉTRIQUES SYNCHRONISATION
+        synchronization:
+            sync_operations_total:
+                type: counter
+                help: "Opérations de synchronisation"
+                labels: ['sync_type', 'source_backend', 'target_backend']
+            
+            sync_latency_seconds:
+                type: histogram
+                help: "Latence de synchronisation"
+                buckets: [1.0, 10.0, 60.0, 300.0, 1800.0, 7200.0]
+                labels: ['sync_type', 'data_size_range']
+            
+            sync_conflicts_total:
+                type: counter
+                help: "Conflits de synchronisation"
+                labels: ['conflict_type', 'resolution_strategy']
+            
+            sync_queue_depth:
+                type: gauge
+                help: "Profondeur de la queue de sync"
+                labels: ['sync_type', 'priority']
+            
+            data_consistency_score:
+                type: gauge
+                help: "Score de cohérence des données (0-100)"
+                labels: ['storage_pair', 'check_type']
+
+        # 📊 MÉTRIQUES QUOTA
+        quota:
+            quota_usage_bytes:
+                type: gauge
+                help: "Utilisation des quotas en bytes"
+                labels: ['quota_type', 'user_type', 'storage_backend']
+            
+            quota_violations_total:
+                type: counter
+                help: "Violations de quota"
+                labels: ['quota_type', 'violation_severity', 'user_type']
+            
+            quota_efficiency:
+                type: gauge
+                help: "Efficacité d'utilisation des quotas (%)"
+                labels: ['quota_type', 'user_segment']
+            
+            storage_predictions:
+                type: gauge
+                help: "Prédictions de stockage (jours avant limite)"
+                labels: ['prediction_type', 'confidence_level']
+
+        # 🔍 MÉTRIQUES INTÉGRITÉ
+        integrity:
+            integrity_checks_total:
+                type: counter
+                help: "Vérifications d'intégrité"
+                labels: ['check_type', 'storage_backend', 'result']
+            
+            corrupted_files_detected:
+                type: counter
+                help: "Fichiers corrompus détectés"
+                labels: ['corruption_type', 'storage_backend', 'recovery_status']
+            
+            checksum_verification_rate:
+                type: gauge
+                help: "Taux de vérification de checksum (%)"
+                labels: ['checksum_algorithm', 'storage_backend']
+            
+            data_recovery_operations:
+                type: counter
+                help: "Opérations de récupération de données"
+                labels: ['recovery_method', 'success', 'corruption_severity']
+            
+            integrity_score:
+                type: gauge
+                help: "Score d'intégrité global (0-100)"
+                labels: ['storage_backend', 'data_category']
+
+        # 🗜️ MÉTRIQUES COMPRESSION/DÉDUPLICATION
+        optimization:
+            compression_ratio:
+                type: gauge
+                help: "Ratio de compression"
+                labels: ['compression_algorithm', 'file_type']
+            
+            deduplication_savings_bytes:
+                type: gauge
+                help: "Économies de déduplication en bytes"
+                labels: ['deduplication_scope', 'file_type']
+            
+            optimization_operations_total:
+                type: counter
+                help: "Opérations d'optimisation"
+                labels: ['optimization_type', 'success']
+            
+            storage_efficiency_improvement:
+                type: gauge
+                help: "Amélioration d'efficacité de stockage (%)"
+                labels: ['optimization_method', 'time_window']
+
+        # 🔄 MÉTRIQUES VERSIONING
+        versioning:
+            file_versions_total:
+                type: counter
+                help: "Versions de fichiers créées"
+                labels: ['version_type', 'storage_backend']
+            
+            version_storage_overhead:
+                type: gauge
+                help: "Surcharge de stockage des versions (%)"
+                labels: ['versioning_policy', 'file_type']
+            
+            version_retention_compliance:
+                type: gauge
+                help: "Conformité de rétention des versions (%)"
+                labels: ['retention_policy', 'data_category']
+
+        # ⚡ MÉTRIQUES PERFORMANCE
+        performance:
+            http_requests_total:
+                type: counter
+                help: "Total des requêtes HTTP storage"
+                labels: ['method', 'endpoint', 'status']
+            
+            http_request_duration_seconds:
+                type: histogram
+                help: "Durée des requêtes HTTP storage"
+                buckets: [0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0]
+                labels: ['method', 'endpoint']
+            
+            io_operations_total:
+                type: counter
+                help: "Opérations I/O totales"
+                labels: ['io_type', 'storage_backend', 'success']
+            
+            io_latency_seconds:
+                type: histogram
+                help: "Latence I/O"
+                buckets: [0.001, 0.01, 0.1, 0.5, 2.0, 10.0]
+                labels: ['io_type', 'storage_backend']
+            
+            throughput_bytes_per_second:
+                type: gauge
+                help: "Débit en bytes par seconde"
+                labels: ['operation_type', 'storage_backend']
+            
+            cache_hit_ratio:
+                type: gauge
+                help: "Ratio de hits cache"
+                labels: ['cache_type', 'storage_layer']
+
+        # 🔒 MÉTRIQUES SÉCURITÉ STORAGE
+        security:
+            authentication_attempts_total:
+                type: counter
+                help: "Tentatives d'authentification storage"
+                labels: ['auth_method', 'result', 'user_type']
+            
+            access_violations_total:
+                type: counter
+                help: "Violations d'accès"
+                labels: ['violation_type', 'severity', 'resource_type']
+            
+            rate_limit_hits:
+                type: counter
+                help: "Dépassements de rate limiting"
+                labels: ['limiter_type', 'endpoint', 'severity']
+            
+            suspicious_activities_detected:
+                type: counter
+                help: "Activités suspectes détectées"
+                labels: ['activity_type', 'severity', 'detection_method']
+            
+            malware_scans_total:
+                type: counter
+                help: "Scans de malware"
+                labels: ['scan_type', 'result', 'file_type']
+
+        # 💼 MÉTRIQUES BUSINESS STORAGE
+        business:
+            storage_costs_total:
+                type: gauge
+                help: "Coûts de stockage totaux"
+                labels: ['cost_category', 'storage_tier', 'billing_period']
+            
+            cost_per_gb_stored:
+                type: gauge
+                help: "Coût par GB stocké"
+                labels: ['storage_backend', 'data_tier']
+            
+            storage_roi:
+                type: gauge
+                help: "ROI du stockage"
+                labels: ['storage_strategy', 'time_period']
+            
+            user_satisfaction_score:
+                type: gauge
+                help: "Score de satisfaction utilisateur (0-100)"
+                labels: ['user_segment', 'feature_category']
+            
+            compliance_score:
+                type: gauge
+                help: "Score de conformité (0-100)"
+                labels: ['compliance_framework', 'audit_period']
+
+        # 🌐 MÉTRIQUES SYSTÈME
+        system:
+            uptime_seconds:
+                type: counter
+                help: "Uptime du service storage"
+            
+            health_checks_total:
+                type: counter
+                help: "Vérifications de santé storage"
+                labels: ['endpoint', 'status']
+            
+            message_bus_operations:
+                type: counter
+                help: "Opérations message bus storage"
+                labels: ['operation', 'success']
+            
+            storage_workers_active:
+                type: gauge
+                help: "Workers storage actifs"
+                labels: ['worker_type', 'queue'] 

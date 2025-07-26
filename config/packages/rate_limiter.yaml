@@ -1,0 +1,377 @@
+# 📁 RATE LIMITERS ULTRA-SPÉCIALISÉS STORAGE ENGINE
+framework:
+    rate_limiter:
+        # 📤 UPLOAD & CRÉATION
+        file_upload:
+            policy: 'sliding_window'
+            limit: 50
+            interval: '1 hour'
+            lock_factory: 'lock.redis.factory'
+            
+        large_file_upload:
+            policy: 'sliding_window'
+            limit: 10
+            interval: '1 hour'
+            lock_factory: 'lock.redis.factory'
+            
+        chunk_upload:
+            policy: 'token_bucket'
+            limit: 200
+            rate: { interval: '1 minute', amount: 100 }
+            lock_factory: 'lock.redis.factory'
+            
+        directory_creation:
+            policy: 'sliding_window'
+            limit: 20
+            interval: '10 minutes'
+            lock_factory: 'lock.redis.factory'
+            
+        bulk_upload:
+            policy: 'sliding_window'
+            limit: 5
+            interval: '1 hour'
+            lock_factory: 'lock.redis.factory'
+
+        # 📥 DOWNLOAD & ACCÈS
+        file_download:
+            policy: 'sliding_window'
+            limit: 200
+            interval: '10 minutes'
+            lock_factory: 'lock.redis.factory'
+            
+        large_file_download:
+            policy: 'sliding_window'
+            limit: 20
+            interval: '10 minutes'
+            lock_factory: 'lock.redis.factory'
+            
+        streaming_download:
+            policy: 'token_bucket'
+            limit: 100
+            rate: { interval: '1 minute', amount: 50 }
+            lock_factory: 'lock.redis.factory'
+            
+        public_access:
+            policy: 'sliding_window'
+            limit: 1000
+            interval: '10 minutes'
+            lock_factory: 'lock.redis.factory'
+
+        # 🖼️ THUMBNAILS & PROCESSING
+        thumbnail_generation:
+            policy: 'sliding_window'
+            limit: 100
+            interval: '10 minutes'
+            lock_factory: 'lock.redis.factory'
+            
+        image_processing:
+            policy: 'sliding_window'
+            limit: 50
+            interval: '10 minutes'
+            lock_factory: 'lock.redis.factory'
+            
+        video_processing:
+            policy: 'sliding_window'
+            limit: 5
+            interval: '1 hour'
+            lock_factory: 'lock.redis.factory'
+            
+        pdf_generation:
+            policy: 'sliding_window'
+            limit: 20
+            interval: '10 minutes'
+            lock_factory: 'lock.redis.factory'
+
+        # 🗜️ COMPRESSION & ARCHIVAGE
+        file_compression:
+            policy: 'sliding_window'
+            limit: 30
+            interval: '10 minutes'
+            lock_factory: 'lock.redis.factory'
+            
+        archive_creation:
+            policy: 'sliding_window'
+            limit: 10
+            interval: '1 hour'
+            lock_factory: 'lock.redis.factory'
+            
+        archive_extraction:
+            policy: 'sliding_window'
+            limit: 15
+            interval: '10 minutes'
+            lock_factory: 'lock.redis.factory'
+
+        # 🔐 ENCRYPTION & SÉCURITÉ
+        file_encryption:
+            policy: 'sliding_window'
+            limit: 30
+            interval: '10 minutes'
+            lock_factory: 'lock.redis.factory'
+            
+        file_decryption:
+            policy: 'sliding_window'
+            limit: 50
+            interval: '10 minutes'
+            lock_factory: 'lock.redis.factory'
+            
+        key_generation:
+            policy: 'sliding_window'
+            limit: 10
+            interval: '1 hour'
+            lock_factory: 'lock.redis.factory'
+
+        # ☁️ CLOUD STORAGE
+        s3_operations:
+            policy: 'sliding_window'
+            limit: 500
+            interval: '10 minutes'
+            lock_factory: 'lock.redis.factory'
+            
+        azure_operations:
+            policy: 'sliding_window'
+            limit: 500
+            interval: '10 minutes'
+            lock_factory: 'lock.redis.factory'
+            
+        gcp_operations:
+            policy: 'sliding_window'
+            limit: 500
+            interval: '10 minutes'
+            lock_factory: 'lock.redis.factory'
+            
+        cloud_sync:
+            policy: 'sliding_window'
+            limit: 100
+            interval: '1 hour'
+            lock_factory: 'lock.redis.factory'
+
+        # 🔄 SYNCHRONISATION
+        sync_operations:
+            policy: 'sliding_window'
+            limit: 200
+            interval: '10 minutes'
+            lock_factory: 'lock.redis.factory'
+            
+        sync_agent_operations:
+            policy: 'token_bucket'
+            limit: 1000
+            rate: { interval: '1 minute', amount: 500 }
+            lock_factory: 'lock.redis.factory'
+            
+        cross_cloud_sync:
+            policy: 'sliding_window'
+            limit: 50
+            interval: '1 hour'
+            lock_factory: 'lock.redis.factory'
+
+        # 💾 BACKUP & RESTORE
+        backup_creation:
+            policy: 'sliding_window'
+            limit: 10
+            interval: '1 day'
+            lock_factory: 'lock.redis.factory'
+            
+        backup_restore:
+            policy: 'sliding_window'
+            limit: 5
+            interval: '1 day'
+            lock_factory: 'lock.redis.factory'
+            
+        incremental_backup:
+            policy: 'sliding_window'
+            limit: 50
+            interval: '1 hour'
+            lock_factory: 'lock.redis.factory'
+
+        # 🔄 VERSIONING
+        version_creation:
+            policy: 'sliding_window'
+            limit: 100
+            interval: '1 hour'
+            lock_factory: 'lock.redis.factory'
+            
+        version_restore:
+            policy: 'sliding_window'
+            limit: 20
+            interval: '10 minutes'
+            lock_factory: 'lock.redis.factory'
+            
+        version_cleanup:
+            policy: 'sliding_window'
+            limit: 50
+            interval: '1 hour'
+            lock_factory: 'lock.redis.factory'
+
+        # 🔍 RECHERCHE & INDEXATION
+        file_search:
+            policy: 'sliding_window'
+            limit: 100
+            interval: '10 minutes'
+            lock_factory: 'lock.redis.factory'
+            
+        metadata_indexing:
+            policy: 'sliding_window'
+            limit: 200
+            interval: '10 minutes'
+            lock_factory: 'lock.redis.factory'
+            
+        content_search:
+            policy: 'sliding_window'
+            limit: 50
+            interval: '10 minutes'
+            lock_factory: 'lock.redis.factory'
+
+        # 📊 QUOTA & LIMITES
+        quota_check:
+            policy: 'sliding_window'
+            limit: 1000
+            interval: '10 minutes'
+            lock_factory: 'lock.redis.factory'
+            
+        quota_update:
+            policy: 'sliding_window'
+            limit: 20
+            interval: '10 minutes'
+            lock_factory: 'lock.redis.factory'
+            
+        storage_usage_calc:
+            policy: 'sliding_window'
+            limit: 100
+            interval: '10 minutes'
+            lock_factory: 'lock.redis.factory'
+
+        # 🔍 INTÉGRITÉ & VALIDATION
+        integrity_check:
+            policy: 'sliding_window'
+            limit: 50
+            interval: '1 hour'
+            lock_factory: 'lock.redis.factory'
+            
+        checksum_verification:
+            policy: 'sliding_window'
+            limit: 200
+            interval: '10 minutes'
+            lock_factory: 'lock.redis.factory'
+            
+        virus_scan:
+            policy: 'sliding_window'
+            limit: 100
+            interval: '10 minutes'
+            lock_factory: 'lock.redis.factory'
+
+        # 🌐 CDN & DISTRIBUTION
+        cdn_sync:
+            policy: 'sliding_window'
+            limit: 100
+            interval: '10 minutes'
+            lock_factory: 'lock.redis.factory'
+            
+        cdn_purge:
+            policy: 'sliding_window'
+            limit: 20
+            interval: '10 minutes'
+            lock_factory: 'lock.redis.factory'
+            
+        edge_distribution:
+            policy: 'sliding_window'
+            limit: 500
+            interval: '10 minutes'
+            lock_factory: 'lock.redis.factory'
+
+        # 📧 WEBHOOKS & NOTIFICATIONS
+        webhook_processing:
+            policy: 'token_bucket'
+            limit: 200
+            rate: { interval: '1 minute', amount: 100 }
+            lock_factory: 'lock.redis.factory'
+            
+        notification_sending:
+            policy: 'sliding_window'
+            limit: 100
+            interval: '10 minutes'
+            lock_factory: 'lock.redis.factory'
+
+        # 📊 ANALYTICS & REPORTING
+        analytics_collection:
+            policy: 'sliding_window'
+            limit: 1000
+            interval: '10 minutes'
+            lock_factory: 'lock.redis.factory'
+            
+        usage_reporting:
+            policy: 'sliding_window'
+            limit: 50
+            interval: '1 hour'
+            lock_factory: 'lock.redis.factory'
+            
+        performance_metrics:
+            policy: 'sliding_window'
+            limit: 500
+            interval: '10 minutes'
+            lock_factory: 'lock.redis.factory'
+
+        # 🗑️ CLEANUP & MAINTENANCE
+        temp_cleanup:
+            policy: 'sliding_window'
+            limit: 10
+            interval: '1 hour'
+            lock_factory: 'lock.redis.factory'
+            
+        orphan_cleanup:
+            policy: 'sliding_window'
+            limit: 5
+            interval: '1 day'
+            lock_factory: 'lock.redis.factory'
+            
+        cache_cleanup:
+            policy: 'sliding_window'
+            limit: 20
+            interval: '1 hour'
+            lock_factory: 'lock.redis.factory'
+
+        # 🚨 SÉCURITÉ CRITIQUE
+        storage_security_sensitive:
+            policy: 'sliding_window'
+            limit: 5
+            interval: '1 hour'
+            lock_factory: 'lock.redis.factory'
+            
+        account_storage_abuse:
+            policy: 'sliding_window'
+            limit: 1
+            interval: '24 hours'
+            lock_factory: 'lock.redis.factory'
+            
+        ddos_protection:
+            policy: 'sliding_window'
+            limit: 10
+            interval: '1 minute'
+            lock_factory: 'lock.redis.factory'
+
+        # 🔐 AUTHENTIFICATION
+        auth_attempts:
+            policy: 'sliding_window'
+            limit: 10
+            interval: '15 minutes'
+            lock_factory: 'lock.redis.factory'
+
+        # 🤖 API & AUTOMATION
+        api_consumption:
+            policy: 'sliding_window'
+            limit: 2000
+            interval: '1 hour'
+            lock_factory: 'lock.redis.factory'
+            
+        automated_operations:
+            policy: 'sliding_window'
+            limit: 500
+            interval: '10 minutes'
+            lock_factory: 'lock.redis.factory'
+
+    # 🌐 PROVIDERS REDIS
+    cache:
+        pools:
+            cache.redis:
+                adapter: cache.adapter.redis
+                provider: 'redis://redis:6379'
+                default_lifetime: 3600 

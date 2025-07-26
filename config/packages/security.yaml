@@ -1,0 +1,248 @@
+security:
+    enable_authenticator_manager: true
+    
+    # 🔐 HIÉRARCHIE DES RÔLES STORAGE-SPÉCIFIQUE
+    role_hierarchy:
+        ROLE_USER:                []
+        ROLE_FILE_VIEWER:         [ROLE_USER]
+        ROLE_FILE_UPLOADER:       [ROLE_USER, ROLE_FILE_VIEWER]
+        ROLE_FILE_MANAGER:        [ROLE_USER, ROLE_FILE_UPLOADER]
+        ROLE_STORAGE_ADMIN:       [ROLE_USER, ROLE_FILE_MANAGER]
+        ROLE_CLOUD_MANAGER:       [ROLE_USER, ROLE_STORAGE_ADMIN]
+        ROLE_BACKUP_MANAGER:      [ROLE_USER, ROLE_STORAGE_ADMIN]
+        ROLE_ENCRYPTION_MANAGER:  [ROLE_USER, ROLE_STORAGE_ADMIN]
+        ROLE_CDN_MANAGER:         [ROLE_USER, ROLE_STORAGE_ADMIN]
+        ROLE_ANALYTICS_VIEWER:    [ROLE_USER, ROLE_FILE_VIEWER]
+        ROLE_QUOTA_MANAGER:       [ROLE_USER, ROLE_STORAGE_ADMIN]
+        ROLE_INTEGRITY_CHECKER:   [ROLE_USER, ROLE_STORAGE_ADMIN]
+        ROLE_API_CONSUMER:        [ROLE_USER]
+        ROLE_WEBHOOK_RECEIVER:    [ROLE_SYSTEM]
+        ROLE_SYNC_AGENT:          [ROLE_SYSTEM] # 🆕 Rôle pour agents de sync
+        ROLE_BACKUP_AGENT:        [ROLE_SYSTEM] # 🆕 Rôle pour agents de backup
+        ROLE_CDN_AGENT:           [ROLE_SYSTEM] # 🆕 Rôle pour agents CDN
+        ROLE_ADMIN:               [ROLE_USER, ROLE_STORAGE_ADMIN, ROLE_CLOUD_MANAGER, ROLE_BACKUP_MANAGER]
+        ROLE_SUPER_ADMIN:         [ROLE_ADMIN, ROLE_ALLOWED_TO_SWITCH]
+        ROLE_SYSTEM:              [ROLE_ADMIN]
+        ROLE_SECURITY:            [ROLE_SUPER_ADMIN] # 🆕 Rôle sécurité dédié
+
+    # 🔑 HASHAGE ULTRA-SÉCURISÉ
+    password_hashers:
+        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
+            algorithm: 'sodium' # 🆕 Sodium vs bcrypt
+            migrate_from: ['bcrypt']
+
+    # 👥 PROVIDERS D'AUTHENTIFICATION STORAGE
+    providers:
+        jwt_users:
+            jwt: ~
+        security_api_users:
+            entity:
+                class: StorageApi\Infrastructure\Security\SecurityApiUser
+                property: email
+        storage_api_users:
+            entity:
+                class: StorageApi\Infrastructure\Security\StorageApiUser
+                property: email
+        webhook_users:
+            memory:
+                users:
+                    webhook_receiver: { password: '%env(WEBHOOK_RECEIVER_SECRET)%', roles: [ROLE_WEBHOOK_RECEIVER] }
+        sync_agent_users:
+            memory:
+                users:
+                    sync_agent: { password: '%env(SYNC_AGENT_SECRET)%', roles: [ROLE_SYNC_AGENT] }
+        backup_agent_users:
+            memory:
+                users:
+                    backup_agent: { password: '%env(BACKUP_AGENT_SECRET)%', roles: [ROLE_BACKUP_AGENT] }
+        cdn_agent_users:
+            memory:
+                users:
+                    cdn_agent: { password: '%env(CDN_AGENT_SECRET)%', roles: [ROLE_CDN_AGENT] }
+        system_users:
+            memory:
+                users:
+                    system_storage: { password: '%env(SYSTEM_STORAGE_SECRET)%', roles: [ROLE_SYSTEM] }
+
+    # 🛡️ FIREWALLS SÉCURISÉS STORAGE
+    firewalls:
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+
+        # 🏥 Health Checks - Accès libre
+        health:
+            pattern: ^/(health|ready|metrics)
+            security: false
+
+        # 🔄 Agents de synchronisation - Authentification spécialisée
+        sync:
+            pattern: ^/api/v1/sync
+            stateless: true
+            custom_authenticators:
+                - StorageApi\Infrastructure\Security\SyncAgentAuthenticator
+            entry_point: StorageApi\Infrastructure\Security\SyncAgentAuthenticator
+
+        # 💾 Agents de backup - Protection ultra-stricte
+        backup:
+            pattern: ^/api/v1/backup
+            stateless: true
+            custom_authenticators:
+                - StorageApi\Infrastructure\Security\BackupAgentAuthenticator
+            entry_point: StorageApi\Infrastructure\Security\BackupAgentAuthenticator
+
+        # 🌐 Agents CDN - Authentification CDN
+        cdn:
+            pattern: ^/api/v1/cdn
+            stateless: true
+            custom_authenticators:
+                - StorageApi\Infrastructure\Security\CDNAgentAuthenticator
+            entry_point: StorageApi\Infrastructure\Security\CDNAgentAuthenticator
+
+        # 📨 Webhooks - Protection HMAC ultra-stricte
+        webhooks:
+            pattern: ^/api/v1/webhooks
+            stateless: true
+            custom_authenticators:
+                - StorageApi\Infrastructure\Security\WebhookAuthenticator
+                - StorageApi\Infrastructure\Security\HMACAuthenticator
+            entry_point: StorageApi\Infrastructure\Security\WebhookAuthenticator
+
+        # 🔐 API Système - Authentification stricte
+        system_api:
+            pattern: ^/api/v1/system
+            stateless: true
+            custom_authenticators:
+                - StorageApi\Infrastructure\Security\SystemAuthenticator
+            entry_point: StorageApi\Infrastructure\Security\SystemAuthenticator
+
+        # 📁 API Publique Lecture - Cache + Rate limiting
+        public_files:
+            pattern: ^/api/v1/files/public
+            stateless: true
+            security: false # Fichiers publics, sécurisé par rate limiting
+
+        # 🔐 API Privée - JWT + API Key intégré security-api
+        api:
+            pattern: ^/api
+            stateless: true
+            custom_authenticators:
+                - lexik_jwt_authentication.jwt_token_authenticator
+                - StorageApi\Infrastructure\Security\SecurityApiKeyAuthenticator
+            entry_point: lexik_jwt_authentication.jwt_token_authenticator
+
+        # 🌐 Interface Web - Sessions sécurisées
+        main:
+            lazy: true
+            provider: jwt_users
+            custom_authenticators:
+                - lexik_jwt_authentication.jwt_token_authenticator
+            entry_point: lexik_jwt_authentication.jwt_token_authenticator
+            
+            # 🛡️ Protection contre les attaques par force brute
+            login_throttling:
+                max_attempts: 3
+                interval: '15 minutes'
+                
+            # 🔒 Logout sécurisé
+            logout:
+                path: api_logout
+                target: api_login
+
+    # 🚫 CONTRÔLE D'ACCÈS GRANULAIRE STORAGE
+    access_control:
+        # ✅ Health checks - Libre
+        - { path: ^/(health|ready|metrics), roles: PUBLIC_ACCESS }
+        
+        # 📁 Fichiers publics - Libre (avec rate limiting)
+        - { path: ^/api/v1/files/public, roles: PUBLIC_ACCESS }
+        
+        # 🔄 Synchronisation - Agents autorisés
+        - { path: ^/api/v1/sync, roles: [ROLE_SYNC_AGENT, ROLE_SYSTEM] }
+        
+        # 💾 Backup - Agents autorisés uniquement
+        - { path: ^/api/v1/backup, roles: [ROLE_BACKUP_AGENT, ROLE_BACKUP_MANAGER, ROLE_SYSTEM] }
+        
+        # 🌐 CDN - Agents autorisés uniquement
+        - { path: ^/api/v1/cdn, roles: [ROLE_CDN_AGENT, ROLE_CDN_MANAGER, ROLE_SYSTEM] }
+        
+        # 📨 Webhooks - Services autorisés uniquement
+        - { path: ^/api/v1/webhooks, roles: [ROLE_WEBHOOK_RECEIVER, ROLE_SYSTEM] }
+        
+        # 🔐 API Système - Système uniquement
+        - { path: ^/api/v1/system, roles: ROLE_SYSTEM }
+        
+        # 📁 Files Overview - Viewers et plus
+        - { path: ^/api/v1/files, methods: [GET], roles: [ROLE_FILE_VIEWER, ROLE_SYSTEM] }
+        - { path: ^/api/v1/files, methods: [POST], roles: [ROLE_FILE_UPLOADER, ROLE_SYSTEM] }
+        - { path: ^/api/v1/files/[^/]+, methods: [PUT, PATCH], roles: [ROLE_FILE_MANAGER, ROLE_SYSTEM] }
+        - { path: ^/api/v1/files/[^/]+, methods: [DELETE], roles: [ROLE_FILE_MANAGER, ROLE_SYSTEM] }
+        
+        # 📂 Directories - File managers et plus
+        - { path: ^/api/v1/directories, methods: [GET], roles: [ROLE_FILE_VIEWER, ROLE_SYSTEM] }
+        - { path: ^/api/v1/directories, methods: [POST], roles: [ROLE_FILE_MANAGER, ROLE_SYSTEM] }
+        - { path: ^/api/v1/directories/[^/]+, methods: [PUT, PATCH], roles: [ROLE_FILE_MANAGER, ROLE_SYSTEM] }
+        - { path: ^/api/v1/directories/[^/]+, methods: [DELETE], roles: [ROLE_STORAGE_ADMIN, ROLE_SYSTEM] }
+        
+        # 📤 Upload - Uploaders et plus
+        - { path: ^/api/v1/upload, methods: [POST], roles: [ROLE_FILE_UPLOADER, ROLE_SYSTEM] }
+        - { path: ^/api/v1/upload/chunk, methods: [POST], roles: [ROLE_FILE_UPLOADER, ROLE_SYSTEM] }
+        - { path: ^/api/v1/upload/complete, methods: [POST], roles: [ROLE_FILE_UPLOADER, ROLE_SYSTEM] }
+        
+        # 📥 Download - Viewers et plus
+        - { path: ^/api/v1/download, methods: [GET], roles: [ROLE_FILE_VIEWER, ROLE_SYSTEM] }
+        - { path: ^/api/v1/download/[^/]+, methods: [GET], roles: [ROLE_FILE_VIEWER, ROLE_SYSTEM] }
+        
+        # 🖼️ Thumbnails - Viewers et plus
+        - { path: ^/api/v1/thumbnails, methods: [GET], roles: [ROLE_FILE_VIEWER, ROLE_SYSTEM] }
+        - { path: ^/api/v1/thumbnails, methods: [POST], roles: [ROLE_FILE_MANAGER, ROLE_SYSTEM] }
+        
+        # 🔐 Encryption - Encryption managers
+        - { path: ^/api/v1/encryption, methods: [GET], roles: [ROLE_ENCRYPTION_MANAGER, ROLE_SYSTEM] }
+        - { path: ^/api/v1/encryption, methods: [POST], roles: [ROLE_ENCRYPTION_MANAGER, ROLE_SYSTEM] }
+        - { path: ^/api/v1/decrypt, methods: [POST], roles: [ROLE_ENCRYPTION_MANAGER, ROLE_SYSTEM] }
+        
+        # ☁️ Cloud Storage - Cloud managers
+        - { path: ^/api/v1/cloud, methods: [GET], roles: [ROLE_CLOUD_MANAGER, ROLE_SYSTEM] }
+        - { path: ^/api/v1/cloud/s3, methods: [POST, PUT, PATCH], roles: [ROLE_CLOUD_MANAGER, ROLE_SYSTEM] }
+        - { path: ^/api/v1/cloud/azure, methods: [POST, PUT, PATCH], roles: [ROLE_CLOUD_MANAGER, ROLE_SYSTEM] }
+        - { path: ^/api/v1/cloud/gcp, methods: [POST, PUT, PATCH], roles: [ROLE_CLOUD_MANAGER, ROLE_SYSTEM] }
+        
+        # 📊 Quota Management - Quota managers
+        - { path: ^/api/v1/quota, methods: [GET], roles: [ROLE_QUOTA_MANAGER, ROLE_SYSTEM] }
+        - { path: ^/api/v1/quota, methods: [POST, PUT, PATCH], roles: [ROLE_QUOTA_MANAGER, ROLE_SYSTEM] }
+        
+        # 🔍 Integrity Checks - Integrity checkers
+        - { path: ^/api/v1/integrity, methods: [GET], roles: [ROLE_INTEGRITY_CHECKER, ROLE_SYSTEM] }
+        - { path: ^/api/v1/integrity/check, methods: [POST], roles: [ROLE_INTEGRITY_CHECKER, ROLE_SYSTEM] }
+        
+        # 📊 Analytics Storage - Analysts et plus
+        - { path: ^/api/v1/analytics, methods: [GET], roles: [ROLE_ANALYTICS_VIEWER, ROLE_SYSTEM] }
+        - { path: ^/api/v1/reports, methods: [GET], roles: [ROLE_ANALYTICS_VIEWER, ROLE_SYSTEM] }
+        
+        # 🔄 Versioning - File managers et plus
+        - { path: ^/api/v1/versions, methods: [GET], roles: [ROLE_FILE_VIEWER, ROLE_SYSTEM] }
+        - { path: ^/api/v1/versions, methods: [POST], roles: [ROLE_FILE_MANAGER, ROLE_SYSTEM] }
+        - { path: ^/api/v1/versions/[^/]+, methods: [DELETE], roles: [ROLE_STORAGE_ADMIN, ROLE_SYSTEM] }
+        
+        # 🗜️ Compression - File managers et plus
+        - { path: ^/api/v1/compress, methods: [POST], roles: [ROLE_FILE_MANAGER, ROLE_SYSTEM] }
+        - { path: ^/api/v1/decompress, methods: [POST], roles: [ROLE_FILE_MANAGER, ROLE_SYSTEM] }
+        
+        # 🔧 Administration complète - Admins
+        - { path: ^/api/v1/admin, roles: ROLE_ADMIN }
+        
+        # 🛡️ Sécurité - Rôle sécurité
+        - { path: ^/api/v1/security, roles: ROLE_SECURITY }
+        
+        # 🌐 Par défaut - Authentifié
+        - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
+        
+        # 🏠 Interface - Libre
+        - { path: ^/, roles: PUBLIC_ACCESS }
+
+    # 🔥 DURCISSEMENT SÉCURITAIRE STORAGE
+    access_decision_manager:
+        strategy: unanimous # 🆕 Toutes les règles doivent être satisfaites
+        allow_if_all_abstain: false
+        allow_if_equal_granted_denied: false 
